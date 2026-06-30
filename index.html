@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Michoacana - App</title>
+    <style>
+        body { font-family: sans-serif; background: #fff5f7; margin: 0; padding-bottom: 160px; }
+        .tabs { display: flex; background: #fce4ec; position: sticky; top: 0; z-index: 10; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: transparent; font-weight: bold; color: #880e4f; cursor: pointer; }
+        .tab-btn.active { background: #e91e63; color: white; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: white; }
+        .btn-add { background: #e91e63; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        .footer { position: fixed; bottom: 0; width: 100%; background: white; padding: 10px; border-top: 2px solid #e91e63; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+        .historial { padding: 15px; font-size: 0.8rem; background: #fdfdfd; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="tabs" id="tabs"></div>
+<div id="menu"></div>
+
+<div class="footer">
+    <div id="cart-list" style="font-size: 0.9rem; max-height: 80px; overflow-y: auto; margin-bottom: 5px;"></div>
+    <div style="font-weight:bold; font-size: 1.2rem; margin-bottom: 10px;">Total: $<span id="total">0</span></div>
+    <div style="display: flex; gap: 5px;">
+        <button onclick="finalizarVenta()" style="background:#4caf50; color:white; border:none; padding:10px; flex: 1; border-radius:5px;">Finalizar</button>
+        <button onclick="limpiar()" style="background:#ff5252; color:white; border:none; padding:10px; flex: 1; border-radius:5px;">Vaciar</button>
+    </div>
+</div>
+
+<div class="historial">
+    <h3>Ventas del día:</h3>
+    <div id="lista-ventas"></div>
+</div>
+
+<script>
+    const data = [
+        { cat: "Aguas", prods: [{n: "Horchata", p: 30}, {n: "Piña Colada", p: 30}, {n: "Jamaica", p: 30}, {n: "Limón", p: 30}, {n: "Melón", p: 30}, {n: "Piña", p: 30}, {n: "Pepino c/L", p: 30}, {n: "Frutas", p: 30}, {n: "Naranja", p: 30}, {n: "Jobito", p: 30}]},
+        { cat: "Helados", prods: [{n: "Fresa", p: 25}, {n: "Vainilla", p: 25}, {n: "Nuez", p: 25}, {n: "Chocolate", p: 25}, {n: "Chocochips", p: 25}, {n: "Napolitano", p: 25}, {n: "Oreo", p: 25}, {n: "Pistache", p: 25}, {n: "Fresa Crema", p: 25}, {n: "Coco", p: 25}, {n: "Mango", p: 25}]},
+        { cat: "Extras", prods: [{n: "Mangonada", p: 50}, {n: "Chocobanana", p: 25}, {n: "Paleta Fruta", p: 25}, {n: "Paleta Leche", p: 30}, {n: "Esquimal Ch", p: 30}, {n: "Esquimal Gr", p: 35}]}
+    ];
+
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    let ventas = JSON.parse(localStorage.getItem('ventas')) || [];
+
+    function render() {
+        document.getElementById('tabs').innerHTML = data.map((d, i) => `<button class="tab-btn" onclick="show(${i})">${d.cat}</button>`).join('');
+        show(0);
+        mostrarVentas();
+    }
+
+    function show(index) {
+        document.getElementById('menu').innerHTML = data[index].prods.map(p => `
+            <div class="item">
+                <span>${p.n} - <b>$${p.p}</b></span>
+                <button class="btn-add" onclick="agregar('${p.n}', ${p.p})">+</button>
+            </div>
+        `).join('');
+    }
+
+    function agregar(n, p) {
+        carrito.push({ n, p });
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        actualizarUI();
+    }
+
+    function actualizarUI() {
+        let html = "";
+        let total = 0;
+        
+        // Usamos el carrito directamente, ya que cada objeto tiene su precio 'p' guardado
+        carrito.forEach((item, index) => {
+            html += `<div>${item.n} - $${item.p}</div>`;
+            total += item.p;
+        });
+
+        document.getElementById('cart-list').innerHTML = html || "Carrito vacío";
+        document.getElementById('total').innerText = total;
+    }
+
+    function finalizarVenta() {
+        if(carrito.length === 0) return alert("El carrito está vacío");
+        const total = document.getElementById('total').innerText;
+        const pago = prompt("¿Con cuánto paga el cliente? (Total: $" + total + ")");
+        
+        if(pago !== null && parseFloat(pago) >= parseFloat(total)) {
+            const cambio = pago - total;
+            const venta = { 
+                total: total, 
+                pago: pago, 
+                cambio: cambio, 
+                fecha: new Date().toLocaleTimeString() 
+            };
+            ventas.push(venta);
+            localStorage.setItem('ventas', JSON.stringify(ventas));
+            limpiar();
+            mostrarVentas();
+        } else if(pago !== null) {
+            alert("Pago insuficiente.");
+        }
+    }
+
+    function mostrarVentas() {
+        document.getElementById('lista-ventas').innerHTML = ventas.map(v => 
+            `<div>${v.fecha} | <b>Total: $${v.total}</b> | Pago: $${v.pago} | Cambio: $${v.cambio}</div><hr>`
+        ).join('');
+    }
+
+    function limpiar() {
+        carrito = [];
+        localStorage.setItem('carrito', '[]');
+        actualizarUI();
+    }
+
+    render();
+    actualizarUI();
+</script>
+</body>
+</html>
