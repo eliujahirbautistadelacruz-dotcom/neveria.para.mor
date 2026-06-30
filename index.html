@@ -14,10 +14,12 @@
         .tabs { display: flex; background: #fce4ec; position: sticky; top: 0; z-index: 10; }
         .tab-btn { flex: 1; padding: 15px; border: none; background: transparent; font-weight: bold; color: #880e4f; cursor: pointer; }
         .tab-btn.active { background: #e91e63; color: white; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #fce4ec; background: white; }
-        .btn-add { background: #e91e63; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+        .item { display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid #fce4ec; background: white; }
+        .botones-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .btn-tamaño { background: #e91e63; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+        .btn-del { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-left: 10px; }
         .footer-cart { position: fixed; bottom: 0; width: 100%; background: #fff; border-top: 3px solid #e91e63; padding: 10px; box-sizing: border-box; }
-        #cart-list { max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 8px; border: 1px dashed #e91e63; margin-bottom: 10px; font-size: 0.9rem; }
+        #cart-list { max-height: 120px; overflow-y: auto; background: #fdfdfd; padding: 8px; border: 1px dashed #e91e63; margin-bottom: 10px; }
         .ticket { background: white; margin: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid #4caf50; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -33,9 +35,9 @@
     <div id="menu"></div>
     <div class="footer-cart">
         <div id="cart-list">El pedido está vacío...</div>
-        <div style="font-size: 1.4rem; font-weight: bold; color: #d81b60; margin-bottom: 10px;" id="total">Total: $0</div>
+        <div style="font-size: 1.4rem; font-weight: bold; color: #d81b60; margin-bottom: 5px;" id="total">Total: $0</div>
         <div style="display:flex; gap: 5px;">
-            <button style="background:#4caf50; color:white; border:none; padding:10px; flex:1; border-radius:5px;" onclick="finalizarVenta()">Cobrar</button>
+            <button style="background:#4caf50; color:white; border:none; padding:10px; flex:2; border-radius:5px;" onclick="finalizarVenta()">Cobrar</button>
             <button style="background:#ff5252; color:white; border:none; padding:10px; flex:1; border-radius:5px;" onclick="limpiar()">X</button>
         </div>
     </div>
@@ -48,9 +50,9 @@
 
 <script>
     const data = [
-        { cat: "Aguas", prods: [{n: "Horchata", p: 30}, {n: "Piña Colada", p: 30}, {n: "Jamaica", p: 30}, {n: "Limón", p: 30}, {n: "Melón", p: 30}, {n: "Piña", p: 30}, {n: "Pepino c/L", p: 30}, {n: "Frutas", p: 30}, {n: "Naranja", p: 30}, {n: "Jobito", p: 30}]},
-        { cat: "Helados", prods: [{n: "Fresa", p: 25}, {n: "Vainilla", p: 25}, {n: "Nuez", p: 25}, {n: "Chocolate", p: 25}, {n: "Chocochips", p: 25}, {n: "Napolitano", p: 25}, {n: "Oreo", p: 25}, {n: "Pistache", p: 25}, {n: "Fresa Crema", p: 25}, {n: "Coco", p: 25}, {n: "Mango", p: 25}]},
-        { cat: "Extras", prods: [{n: "Mangonada", p: 50}, {n: "Chocobanana", p: 25}, {n: "Paleta Fruta", p: 25}, {n: "Paleta Leche", p: 30}, {n: "Esquimal Ch", p: 30}, {n: "Esquimal Gr", p: 35}]}
+        { cat: "Helados", prods: ["Fresa", "Vainilla", "Fresas con crema", "Chicle", "Napolitano", "Uva-vainilla", "Oreo", "Chocochips", "Nuez", "Almendrado", "Gansito", "Pistache", "Limón", "Mango"]},
+        { cat: "Aguas", prods: ["Pepino con limón", "Limón", "Jamaica", "Piña natural", "Piña colada", "Frutas", "Horchata"]},
+        { cat: "Extras", prods: ["Mangonada", "Chocobanana", "Paleta Fruta", "Paleta Leche", "Esquimal Grande"]}
     ];
 
     let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
@@ -69,12 +71,28 @@
     }
 
     function show(index) {
-        document.getElementById('menu').innerHTML = data[index].prods.map(p => `
-            <div class="item">
-                <span>${p.n} - <b>$${p.p}</b></span>
-                <button class="btn-add" onclick="agregar('${p.n}', ${p.p})">+</button>
-            </div>
-        `).join('');
+        let cat = data[index].cat;
+        document.getElementById('menu').innerHTML = data[index].prods.map(p => {
+            let botones = "";
+            if (cat === "Helados") {
+                botones = `<div class="botones-container">
+                    <button class="btn-tamaño" onclick="agregar('${p} (Cono S)', 25)">Cono S $25</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (Cono D)', 35)">Cono D $35</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso D)', 30)">Vaso D $30</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso G)', 35)">Vaso G $35</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (1/2 L)', 60)">1/2 L $60</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (1 L)', 120)">1 L $120</button>
+                </div>`;
+            } else if (cat === "Aguas") {
+                botones = `<div class="botones-container">
+                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso)', 25)">Vaso $25</button>
+                    <button class="btn-tamaño" onclick="agregar('${p} (Litro)', 40)">Litro $40</button>
+                </div>`;
+            } else {
+                botones = `<button class="btn-tamaño" onclick="agregar('${p}', 0)">Agregar</button>`;
+            }
+            return `<div class="item"><span>${p}</span>${botones}</div>`;
+        }).join('');
     }
 
     function agregar(n, p) {
@@ -84,65 +102,62 @@
     }
 
     function actualizarUI() {
-        const counts = carrito.reduce((acc, item) => { acc[item.n] = (acc[item.n] || 0) + 1; return acc; }, {});
+        const counts = carrito.reduce((acc, item) => { 
+            let key = item.n + "|" + item.p;
+            acc[key] = (acc[key] || 0) + 1; return acc; 
+        }, {});
         const cartList = document.getElementById('cart-list');
-        let total = 0;
-        let html = "";
-        for (const [nombre, cantidad] of Object.entries(counts)) {
-            const precio = carrito.find(i => i.n === nombre).p;
-            html += `<div><b>${cantidad}x</b> ${nombre}</div>`;
-            total += (cantidad * precio);
+        let total = 0, html = "";
+        for (const [key, cant] of Object.entries(counts)) {
+            let [nombre, precio] = key.split("|");
+            html += `<div style="margin-bottom:5px;"><b>${cant}x</b> ${nombre} <button class="btn-del" onclick="eliminar('${key}')">X</button></div>`;
+            total += (cant * parseInt(precio));
         }
         cartList.innerHTML = html || "El pedido está vacío...";
         document.getElementById('total').innerText = "Total: $" + total;
     }
 
+    function eliminar(key) {
+        let [n, p] = key.split("|");
+        let i = carrito.findIndex(it => it.n === n && it.p == p);
+        if(i > -1) { carrito.splice(i, 1); localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarUI(); }
+    }
+
     function finalizarVenta() {
         if(carrito.length === 0) return;
-        const total = carrito.reduce((sum, item) => sum + item.p, 0);
-        const pago = prompt("Total: $" + total + ". ¿Con cuánto paga el cliente?");
-        
+        const total = carrito.reduce((s, i) => s + i.p, 0);
+        const pago = prompt("Total: $" + total + ". ¿Con cuánto paga?");
         if(pago !== null && parseFloat(pago) >= total) {
             const counts = carrito.reduce((acc, item) => { acc[item.n] = (acc[item.n] || 0) + 1; return acc; }, {});
-            // Aquí creamos la lista legible de productos
-            let listaProductos = Object.entries(counts).map(e => `${e[1]}x ${e[0]}`).join(", ");
-            
-            let venta = { 
-                fecha: new Date().toLocaleTimeString(), 
-                detalles: listaProductos, 
-                total: total, 
-                pago: pago, 
-                cambio: pago - total 
-            };
-            
-            let historial = JSON.parse(localStorage.getItem('historialVentas') || "[]");
-            historial.push(venta);
-            localStorage.setItem('historialVentas', JSON.stringify(historial));
-            
-            alert("Venta registrada.");
+            let detalle = Object.entries(counts).map(e => `${e[1]}x ${e[0]}`).join(", ");
+            let h = JSON.parse(localStorage.getItem('historialVentas') || "[]");
+            h.push({ fecha: new Date().toLocaleTimeString(), detalles: detalle, total: total, pago: pago, cambio: pago - total });
+            localStorage.setItem('historialVentas', JSON.stringify(h));
             limpiar();
         }
     }
 
     function renderHistorial() {
         let h = JSON.parse(localStorage.getItem('historialVentas') || "[]");
-        document.getElementById('historial-container').innerHTML = h.map(v => `
+        document.getElementById('historial-container').innerHTML = h.map((v, i) => `
             <div class="ticket">
-                <p><b>Hora:</b> ${v.fecha}</p>
-                <p><b>Productos:</b> ${v.detalles}</p>
-                <p><b>Total:</b> $${v.total} | <b>Pago:</b> $${v.pago} | <b>Cambio:</b> $${v.cambio}</p>
+                <p><b>Hora:</b> ${v.fecha} | <b>Total:</b> $${v.total}</p>
+                <p><b>Detalles:</b> ${v.detalles}</p>
+                <button onclick="borrar(${i})" style="color:red; background:none; border:none;">Borrar</button>
             </div>
         `).join('');
     }
 
-    function limpiar() {
-        carrito = [];
-        localStorage.setItem('carrito', '[]');
-        actualizarUI();
+    function borrar(i) {
+        if(prompt("Contraseña admin:") === "1234") {
+            let h = JSON.parse(localStorage.getItem('historialVentas'));
+            h.splice(i, 1); localStorage.setItem('historialVentas', JSON.stringify(h)); renderHistorial();
+        }
     }
 
-    render();
-    actualizarUI();
+    function limpiar() { carrito = []; localStorage.setItem('carrito', '[]'); actualizarUI(); }
+
+    render(); actualizarUI();
 </script>
 </body>
 </html>
