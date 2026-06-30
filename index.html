@@ -7,19 +7,26 @@
     <style>
         body { font-family: sans-serif; background: #fff5f7; margin: 0; padding-bottom: 220px; }
         .nav-tabs { display: flex; background: #c2185b; }
-        .nav-btn { flex: 1; padding: 15px; border: none; background: #c2185b; color: white; font-weight: bold; cursor: pointer; }
+        .nav-btn { flex: 1; padding: 12px; border: none; background: #c2185b; color: white; font-weight: bold; cursor: pointer; }
         .nav-btn.active { background: #fff5f7; color: #e91e63; }
-        .view { display: none; }
+        .view { display: none; } 
         .view.active { display: block; }
+        
         .tabs { display: flex; background: #fce4ec; position: sticky; top: 0; z-index: 10; }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: transparent; font-weight: bold; color: #880e4f; cursor: pointer; }
-        .tab-btn.active { background: #e91e63; color: white; }
-        .item { display: flex; flex-direction: column; padding: 12px 15px; border-bottom: 1px solid #fce4ec; background: white; }
-        .botones-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .btn-tamaño { background: #e91e63; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
-        .btn-del { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-left: 10px; }
-        .footer-cart { position: fixed; bottom: 0; width: 100%; background: #fff; border-top: 3px solid #e91e63; padding: 10px; box-sizing: border-box; }
-        #cart-list { max-height: 120px; overflow-y: auto; background: #fdfdfd; padding: 8px; border: 1px dashed #e91e63; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-size: 0.9rem; color: #880e4f; cursor: pointer; }
+        .tab-btn.active { background: #e91e63; color: white; font-weight: bold; }
+        
+        /* Layout de cuadrícula compacto de 2 columnas */
+        #menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+        .card { background: white; padding: 8px; border-radius: 8px; border: 1px solid #fce4ec; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .card h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: #4a148c; }
+        
+        .btn-box { display: flex; flex-direction: column; gap: 3px; }
+        .btn-size { background: #e91e63; color: white; border: none; padding: 5px; border-radius: 3px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+        
+        .footer-cart { position: fixed; bottom: 0; width: 100%; background: white; border-top: 2px solid #e91e63; padding: 10px; box-sizing: border-box; z-index: 20; }
+        #cart-list { max-height: 90px; overflow-y: auto; font-size: 0.85rem; margin-bottom: 5px; background: #fdfdfd; padding: 5px; border: 1px dashed #e91e63; }
+        .btn-del { color: red; font-weight: bold; border: none; background: none; cursor: pointer; margin-left: 5px; }
         .ticket { background: white; margin: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid #4caf50; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -35,24 +42,36 @@
     <div id="menu"></div>
     <div class="footer-cart">
         <div id="cart-list">El pedido está vacío...</div>
-        <div style="font-size: 1.4rem; font-weight: bold; color: #d81b60; margin-bottom: 5px;" id="total">Total: $0</div>
-        <div style="display:flex; gap: 5px;">
-            <button style="background:#4caf50; color:white; border:none; padding:10px; flex:2; border-radius:5px;" onclick="finalizarVenta()">Cobrar</button>
-            <button style="background:#ff5252; color:white; border:none; padding:10px; flex:1; border-radius:5px;" onclick="limpiar()">X</button>
+        <div style="font-size: 1.3rem; font-weight: bold; color: #d81b60;">Total: $<span id="total-val">0</span></div>
+        <div style="display:flex; gap: 5px; margin-top:5px;">
+            <button style="flex:2; background:#4caf50; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold;" onclick="finalizarVenta()">Cobrar</button>
+            <button style="flex:1; background:#ff5252; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold;" onclick="limpiar()">X</button>
         </div>
     </div>
 </div>
 
 <div id="view-historial" class="view">
-    <h2 style="text-align:center; color:#880e4f;">Ventas del día</h2>
-    <div id="historial-container"></div>
+    <h2 style="text-align:center; color:#880e4f; margin-top:10px;">Ventas del día</h2>
+    <div id="historial-container" style="padding:10px;"></div>
 </div>
 
 <script>
     const data = [
-        { cat: "Helados", prods: ["Fresa", "Vainilla", "Fresas con crema", "Chicle", "Napolitano", "Uva-vainilla", "Oreo", "Chocochips", "Nuez", "Almendrado", "Gansito", "Pistache", "Limón", "Mango"]},
-        { cat: "Aguas", prods: ["Pepino con limón", "Limón", "Jamaica", "Piña natural", "Piña colada", "Frutas", "Horchata"]},
-        { cat: "Extras", prods: ["Mangonada", "Chocobanana", "Paleta Fruta", "Paleta Leche", "Esquimal Grande"]}
+        { cat: "Helados", prods: [
+            { tipo: "sabores", lista: ["Fresa", "Vainilla", "Chicle", "Napolitano", "Uva-vainilla", "Oreo", "Chocochips", "Nuez", "Almendrado", "Gansito", "Pistache", "Limón", "Mango"] }
+        ]},
+        { cat: "Aguas", prods: [
+            { tipo: "sabores", lista: ["Pepino/Limón", "Limón", "Jamaica", "Piña", "Piña colada", "Frutas", "Horchata"] }
+        ]},
+        { cat: "Extras", prods: [
+            { tipo: "individual", n: "Fresas con crema", p: 50 },
+            { tipo: "individual", n: "Mangonada", p: 30 },
+            { tipo: "individual", n: "Chocobanana", p: 25 },
+            { tipo: "individual", n: "Paleta Fruta", p: 25 },
+            { tipo: "individual", n: "Paleta Leche", p: 30 },
+            { tipo: "individual", n: "Crema extra", p: 10 },
+            { tipo: "individual", n: "Bolita extra", p: 20 }
+        ]}
     ];
 
     let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
@@ -61,8 +80,12 @@
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('view-' + viewName).classList.add('active');
-        event.target.classList.add('active');
-        if(viewName === 'historial') renderHistorial();
+        // Marcar botón activo correctamente
+        if(viewName === 'vender') document.querySelectorAll('.nav-btn')[0].classList.add('active');
+        if(viewName === 'historial') {
+            document.querySelectorAll('.nav-btn')[1].classList.add('active');
+            renderHistorial();
+        }
     }
 
     function render() {
@@ -72,68 +95,108 @@
 
     function show(index) {
         let cat = data[index].cat;
-        document.getElementById('menu').innerHTML = data[index].prods.map(p => {
-            let botones = "";
-            if (cat === "Helados") {
-                botones = `<div class="botones-container">
-                    <button class="btn-tamaño" onclick="agregar('${p} (Cono S)', 25)">Cono S $25</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (Cono D)', 35)">Cono D $35</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso D)', 30)">Vaso D $30</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso G)', 35)">Vaso G $35</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (1/2 L)', 60)">1/2 L $60</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (1 L)', 120)">1 L $120</button>
-                </div>`;
-            } else if (cat === "Aguas") {
-                botones = `<div class="botones-container">
-                    <button class="btn-tamaño" onclick="agregar('${p} (Vaso)', 25)">Vaso $25</button>
-                    <button class="btn-tamaño" onclick="agregar('${p} (Litro)', 40)">Litro $40</button>
-                </div>`;
-            } else {
-                botones = `<button class="btn-tamaño" onclick="agregar('${p}', 0)">Agregar</button>`;
-            }
-            return `<div class="item"><span>${p}</span>${botones}</div>`;
-        }).join('');
-    }
+        let html = "";
 
-    function agregar(n, p) {
-        carrito.push({ n, p });
-        localStorage.setItem('carrito', JSON.stringify(carrito));
-        actualizarUI();
-    }
-
-    function actualizarUI() {
-        const counts = carrito.reduce((acc, item) => { 
-            let key = item.n + "|" + item.p;
-            acc[key] = (acc[key] || 0) + 1; return acc; 
-        }, {});
-        const cartList = document.getElementById('cart-list');
-        let total = 0, html = "";
-        for (const [key, cant] of Object.entries(counts)) {
-            let [nombre, precio] = key.split("|");
-            html += `<div style="margin-bottom:5px;"><b>${cant}x</b> ${nombre} <button class="btn-del" onclick="eliminar('${key}')">X</button></div>`;
-            total += (cant * parseInt(precio));
+        if (cat === "Helados") {
+            html = data[index].prods[0].lista.map(p => `
+                <div class="card">
+                    <h4>${p}</h4>
+                    <div class="btn-box">
+                        <button class="btn-size" onclick="add('${p} (Cono S)', 25)">Cono S $25</button>
+                        <button class="btn-size" onclick="add('${p} (Cono D)', 35)">Cono D $35</button>
+                        <button class="btn-size" onclick="add('${p} (Vaso D)', 30)">Vaso D $30</button>
+                        <button class="btn-size" onclick="add('${p} (Vaso G)', 35)">Vaso G $35</button>
+                        <button class="btn-size" onclick="add('${p} (1/2L)', 60)">1/2 L $60</button>
+                        <button class="btn-size" onclick="add('${p} (1L)', 120)">1 L $120</button>
+                    </div>
+                </div>
+            `).join('');
+        } else if (cat === "Aguas") {
+            html = data[index].prods[0].lista.map(p => `
+                <div class="card">
+                    <h4>${p}</h4>
+                    <div class="btn-box">
+                        <button class="btn-size" onclick="add('${p} (Vaso)', 25)">Vaso $25</button>
+                        <button class="btn-size" onclick="add('${p} (Litro)', 40)">Litro $40</button>
+                    </div>
+                </div>
+            `).join('');
+        } else if (cat === "Extras") {
+            html = data[index].prods.map(p => `
+                <div class="card">
+                    <h4>${p.n}</h4>
+                    <div class="btn-box">
+                        <button class="btn-size" onclick="add('${p.n}', ${p.p})">Agregar $${p.p}</button>
+                    </div>
+                </div>
+            `).join('');
         }
-        cartList.innerHTML = html || "El pedido está vacío...";
-        document.getElementById('total').innerText = "Total: $" + total;
+
+        document.getElementById('menu').innerHTML = html;
     }
 
-    function eliminar(key) {
-        let [n, p] = key.split("|");
-        let i = carrito.findIndex(it => it.n === n && it.p == p);
-        if(i > -1) { carrito.splice(i, 1); localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarUI(); }
+    function add(n, p) { 
+        carrito.push({n, p}); 
+        localStorage.setItem('carrito', JSON.stringify(carrito)); 
+        update(); 
+    }
+
+    function update() {
+        const counts = carrito.reduce((acc, item) => {
+            let key = item.n + "|" + item.p;
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+
+        let total = 0;
+        let html = "";
+        
+        for (const [key, cantidad] of Object.entries(counts)) {
+            let [nombre, precio] = key.split("|");
+            html += `<div style="margin-bottom:4px;"><b>${cantidad}x</b> ${nombre} - $${precio * cantidad} <button class="btn-del" onclick="del('${nombre}', ${precio})">X</button></div>`;
+            total += (cantidad * parseInt(precio));
+        }
+
+        document.getElementById('cart-list').innerHTML = html || "El pedido está vacío...";
+        document.getElementById('total-val').innerText = total;
+    }
+
+    function del(nombre, precio) { 
+        let i = carrito.findIndex(it => it.n === nombre && it.p == precio);
+        if(i > -1) {
+            carrito.splice(i, 1);
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            update();
+        }
     }
 
     function finalizarVenta() {
         if(carrito.length === 0) return;
-        const total = carrito.reduce((s, i) => s + i.p, 0);
-        const pago = prompt("Total: $" + total + ". ¿Con cuánto paga?");
+        let total = carrito.reduce((a, b) => a + b.p, 0);
+        let pago = prompt("Total: $" + total + ". ¿Con cuánto paga el cliente?");
+        
         if(pago !== null && parseFloat(pago) >= total) {
-            const counts = carrito.reduce((acc, item) => { acc[item.n] = (acc[item.n] || 0) + 1; return acc; }, {});
+            const counts = carrito.reduce((acc, item) => {
+                acc[item.n] = (acc[item.n] || 0) + 1;
+                return acc;
+            }, {});
+            
             let detalle = Object.entries(counts).map(e => `${e[1]}x ${e[0]}`).join(", ");
             let h = JSON.parse(localStorage.getItem('historialVentas') || "[]");
-            h.push({ fecha: new Date().toLocaleTimeString(), detalles: detalle, total: total, pago: pago, cambio: pago - total });
+            
+            h.push({ 
+                fecha: new Date().toLocaleTimeString(), 
+                detalles: detalle, 
+                total: total, 
+                pago: pago, 
+                cambio: pago - total 
+            });
+            
             localStorage.setItem('historialVentas', JSON.stringify(h));
+            alert("Venta registrada. Cambio: $" + (pago - total));
             limpiar();
+        } else if (pago !== null) {
+            alert("El pago debe ser igual o mayor al total.");
         }
     }
 
@@ -142,8 +205,9 @@
         document.getElementById('historial-container').innerHTML = h.map((v, i) => `
             <div class="ticket">
                 <p><b>Hora:</b> ${v.fecha} | <b>Total:</b> $${v.total}</p>
-                <p><b>Detalles:</b> ${v.detalles}</p>
-                <button onclick="borrar(${i})" style="color:red; background:none; border:none;">Borrar</button>
+                <p><b>Productos:</b> ${v.detalles}</p>
+                <p><b>Pago:</b> $${v.pago} | <b>Cambio:</b> $${v.cambio}
+                <button onclick="borrar(${i})" style="float:right; color:red; background:none; border:none; font-weight:bold; cursor:pointer;">Borrar</button></p>
             </div>
         `).join('');
     }
@@ -151,13 +215,22 @@
     function borrar(i) {
         if(prompt("Contraseña admin:") === "1234") {
             let h = JSON.parse(localStorage.getItem('historialVentas'));
-            h.splice(i, 1); localStorage.setItem('historialVentas', JSON.stringify(h)); renderHistorial();
+            h.splice(i, 1); 
+            localStorage.setItem('historialVentas', JSON.stringify(h)); 
+            renderHistorial();
+        } else {
+            alert("Contraseña incorrecta.");
         }
     }
 
-    function limpiar() { carrito = []; localStorage.setItem('carrito', '[]'); actualizarUI(); }
+    function limpiar() { 
+        carrito = []; 
+        localStorage.setItem('carrito', '[]'); 
+        update(); 
+    }
 
-    render(); actualizarUI();
+    render(); 
+    update();
 </script>
 </body>
 </html>
